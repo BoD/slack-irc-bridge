@@ -1,11 +1,6 @@
 const CONFIG = require('./config');
 
-var http = require('http');
-
 var IRCClient = require('irc').Client;
-var SlackClient = require('slack-client').RtmClient;
-
-var SlackMemoryDataStore = require('slack-client').MemoryDataStore;
 
 var string = require('string');
 var emoji = require('node-emoji');
@@ -15,65 +10,63 @@ var ircConfig = {
   secure: CONFIG.IRC_SECURE,
   password: CONFIG.IRC_PASSWORD,
   sasl: CONFIG.IRC_SASL,
-  channels: [ CONFIG.IRC_CHANNEL ]
+  channels: [CONFIG.IRC_CHANNEL]
 };
 
 var ircClient = new IRCClient(CONFIG.IRC_SERVER, CONFIG.IRC_NICK, ircConfig);
-var slackClient = new SlackClient(CONFIG.SLACK_TOKEN, {
-  logLevel: 'error',
-  dataStore: new SlackMemoryDataStore()
+
+const { App } = require('@slack/bolt');
+
+const slackApp = new App({
+  token: CONFIG.SLACK_TOKEN,
+  appToken: CONFIG.SLACK_APP_TOKEN,
+  socketMode: true
 });
 
-ircClient.once('raw', function(message) {
-  console.log('IRC client connected!');
+slackApp.message(async ({ message, say }) => {
+  var text = emoji.emojify(string(message.text).unescapeHTML().toString());
+  ircClient.say(CONFIG.IRC_CHANNEL, text);
+});
 
-  slackClient.login();
+(async () => {
+  await slackApp.start();
+})();
 
-  slackClient.on('open', function() {
-    console.log('Slack client connected!');
+ircClient.once('raw', function (message) {
+  console.log('Now connected to IRC');
+});
 
-    var slackChannel = slackClient.dataStore.getChannelByName(CONFIG.SLACK_CHANNEL);
+ircClient.on('message', function (user, channel, text) {
+  if (user === CONFIG.IRC_NICK) {
+    return;
+  }
 
-    ircClient.on('message', function(user, channel, text) {
-      if (user === CONFIG.IRC_NICK) {
-        return;
-      }
-
-      slackClient.sendMessage('<' + user + '> ' + text, slackChannel.id);
-    });
-
-    slackClient.on('message', function(message) {
-      var user = slackClient.dataStore.getUserById(message.user).name;
-      var text = emoji.emojify(string(message.text).unescapeHTML().toString());
-
-      text = text.replace(/<@(.+)>/g, function(match, p1, offset, string) {
-        return '@' + slackClient.dataStore.getUserById(p1).name;
-      });
-
-      ircClient.say(CONFIG.IRC_CHANNEL, '<' + user + '> ' + text);
-    });
+  slackApp.client.chat.postMessage({
+    username: user,
+    text: text,
+    channel: conversationId,
   });
 });
 
-ircClient.on('error', function(error) {
+ircClient.on('error', function (error) {
   console.error(error);
 });
 
-slackClient.on('error', function(error) {
-  console.error(error);
-});
 
-slackClient.login();
+var conversationId;
 
-var server = http.createServer(function(req, res) {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Bridging Slack to IRC');
-});
-
-server.listen(CONFIG.PORT);
-
-if (CONFIG.NODE_ENV !== 'development') {
-  setInterval(function() {
-    http.get('http://' + CONFIG.HOST);
-  }, 300000);
+async function findConversation(name) {
+  try {
+    const result = await slackApp.client.conversations.list({types: "public_channel,private_channel"});
+    for (const channel of result.channels) {
+      if (channel.name === name) {
+        conversationId = channel.id;
+        break;
+      }
+    }
+  } catch (error) {
+    console.error(error);
+  }
 }
+
+findConversation(CONFIG.SLACK_CHANNEL);
