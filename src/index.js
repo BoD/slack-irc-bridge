@@ -55,17 +55,28 @@ ircClient.on('message', function (user, channel, text) {
     if (user === CONFIG.IRC_NICK) {
         return;
     }
-
     void slackApp.client.chat.postMessage({
         username: user,
         text: text,
         channel: conversationId,
+        icon_url: `https://www.gravatar.com/avatar/${getGravatarId(user)}?d=wavatar`,
     });
 });
 
 ircClient.on('error', function (error) {
     console.error(error);
 });
+
+/**
+ * @param {string} user
+ */
+function getGravatarId(user) {
+    let result = '';
+    for (let i = 0; i < user.length; i++) {
+        result += user.charCodeAt(i).toString(16);
+    }
+    return result.padStart(32, "0");
+}
 
 
 let conversationId;
@@ -85,6 +96,7 @@ async function findConversation(name) {
 }
 
 void findConversation(CONFIG.SLACK_CHANNEL);
+
 
 let slackUserId;
 
