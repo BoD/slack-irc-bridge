@@ -30,13 +30,15 @@ slackApp.message(async ({message}) => {
     const text = emoji.emojify(
         string(message.text).unescapeHTML().toString()
             .replaceAll(/<(http.?:\/\/.+?)(\|.+)?>/g, "$1")
-            .replaceAll(":slightly_smiling_face:", ":)")
-            .replaceAll(":disappointed:", ":(")
-            .replaceAll(":smile:", ":D")
-            .replaceAll(":stuck_out_tongue:", ":P")
-            .replaceAll(":open_mouth:", ":O")
-            .replaceAll(":wink:", ";)")
-            .replaceAll(":cry:", ":'("),
+            .replaceAll(/:slightly_smiling_face:|:blush:|🙂|😊/g, ":)")
+            .replaceAll(/:disappointed:|:pensive:|🙁|😞|😔/g, ":(")
+            .replaceAll(/:smile:|:grin:|:grinning:|😁|😄/g, ":D")
+            .replaceAll(/:stuck_out_tongue:|😛/g, ":P")
+            .replaceAll(/:open_mouth:|😮/g, ":O")
+            .replaceAll(/:wink:|😉/g, ";)")
+            .replaceAll(/:cry:|😢/g, ":'(")
+            .replaceAll(/:joy:|😂/g, ":_)")
+        ,
         null,
         null
     );
