@@ -27,6 +27,9 @@ slackApp.message(async ({message}) => {
     if (message.user !== slackUserId) {
         return;
     }
+    if (message.channel !== conversationId) {
+        return;
+    }
     const text = emoji.emojify(
         string(message.text).unescapeHTML().toString()
             .replaceAll(/<(http.?:\/\/.+?)(\|.+)?>/g, "$1")
