@@ -10,8 +10,13 @@ const ircConfig = {
     secure: CONFIG.IRC_SECURE,
     password: CONFIG.IRC_PASSWORD,
     sasl: CONFIG.IRC_SASL,
-    channels: [CONFIG.IRC_CHANNEL]
+    channels: [CONFIG.IRC_CHANNEL],
+    userName: CONFIG.IRC_USER_NAME,
+    nickname: CONFIG.IRC_NICK,
+    debug: true
 };
+
+console.log("%O", ircConfig);
 
 const ircClient = new IRCClient(CONFIG.IRC_SERVER, CONFIG.IRC_NICK, ircConfig);
 

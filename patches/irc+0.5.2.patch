@@ -1,0 +1,179 @@
+diff --git a/node_modules/irc/lib/irc.js b/node_modules/irc/lib/irc.js
+index 23ccfe0..0fddb5a 100644
+--- a/node_modules/irc/lib/irc.js
++++ b/node_modules/irc/lib/irc.js
+@@ -256,11 +256,11 @@ function Client(server, nick, opt) {
+                 self.emit('notice', from, to, text, message);
+ 
+                 if (self.opt.debug && to == self.nick)
+-                    util.log('GOT NOTICE from ' + (from ? '"' + from + '"' : 'the server') + ': "' + text + '"');
++                    console.log('GOT NOTICE from ' + (from ? '"' + from + '"' : 'the server') + ': "' + text + '"');
+                 break;
+             case 'MODE':
+                 if (self.opt.debug)
+-                    util.log('MODE: ' + message.args[0] + ' sets mode: ' + message.args[1]);
++                    console.log('MODE: ' + message.args[0] + ' sets mode: ' + message.args[1]);
+ 
+                 channel = self.chanData(message.args[0]);
+                 if (!channel) break;
+@@ -341,7 +341,7 @@ function Client(server, nick, opt) {
+                 }
+ 
+                 if (self.opt.debug)
+-                    util.log('NICK: ' + message.nick + ' changes nick to ' + message.args[0]);
++                    console.log('NICK: ' + message.nick + ' changes nick to ' + message.args[0]);
+ 
+                 channels = [];
+ 
+@@ -565,7 +565,7 @@ function Client(server, nick, opt) {
+                 if (to.toUpperCase() === self.nick.toUpperCase()) self.emit('pm', from, text, message);
+ 
+                 if (self.opt.debug && to == self.nick)
+-                    util.log('GOT MESSAGE from ' + from + ': ' + text);
++                    console.log('GOT MESSAGE from ' + from + ': ' + text);
+                 break;
+             case 'INVITE':
+                 from = message.nick;
+@@ -575,7 +575,7 @@ function Client(server, nick, opt) {
+                 break;
+             case 'QUIT':
+                 if (self.opt.debug)
+-                    util.log('QUIT: ' + message.prefix + ' ' + message.args.join(' '));
++                    console.log('QUIT: ' + message.prefix + ' ' + message.args.join(' '));
+                 if (self.nick == message.nick) {
+                     // TODO handle?
+                     break;
+@@ -616,12 +616,12 @@ function Client(server, nick, opt) {
+ 
+             case 'err_umodeunknownflag':
+                 if (self.opt.showErrors)
+-                    util.log('\u001b[01;31mERROR: ' + util.inspect(message) + '\u001b[0m');
++                    console.log('\u001b[01;31mERROR: ' + util.inspect(message) + '\u001b[0m');
+                 break;
+ 
+             case 'err_erroneusnickname':
+                 if (self.opt.showErrors)
+-                    util.log('\u001b[01;31mERROR: ' + util.inspect(message) + '\u001b[0m');
++                    console.log('\u001b[01;31mERROR: ' + util.inspect(message) + '\u001b[0m');
+                 self.emit('error', message);
+                 break;
+ 
+@@ -630,7 +630,7 @@ function Client(server, nick, opt) {
+                 if (self.opt.showErrors) {
+                     self.emit('error', message);
+                     if (self.opt.showErrors)
+-                        util.log('\u001b[01;31mERROR: ' + util.inspect(message) + '\u001b[0m');
++                        console.log('\u001b[01;31mERROR: ' + util.inspect(message) + '\u001b[0m');
+                 }
+                 break;
+ 
+@@ -642,11 +642,11 @@ function Client(server, nick, opt) {
+                 if (message.commandType == 'error') {
+                     self.emit('error', message);
+                     if (self.opt.showErrors)
+-                        util.log('\u001b[01;31mERROR: ' + util.inspect(message) + '\u001b[0m');
++                        console.log('\u001b[01;31mERROR: ' + util.inspect(message) + '\u001b[0m');
+                 }
+                 else {
+                     if (self.opt.debug)
+-                        util.log('\u001b[01;31mUnhandled message: ' + util.inspect(message) + '\u001b[0m');
++                        console.log('\u001b[01;31mUnhandled message: ' + util.inspect(message) + '\u001b[0m');
+                     break;
+                 }
+         }
+@@ -717,11 +717,19 @@ Client.prototype._connectionHandler = function() {
+     if (this.opt.sasl) {
+         // see http://ircv3.atheme.org/extensions/sasl-3.1
+         this.send('CAP REQ', 'sasl');
++        this.send('CAP END');
++        this.send('AUTHENTICATE', 'PLAIN');
++        this.send('AUTHENTICATE',
++            new Buffer(
++                this.opt.nick + '\0' +
++                this.opt.userName + '\0' +
++                this.opt.password
++            ).toString('base64'));
+     } else if (this.opt.password) {
+         this.send('PASS', this.opt.password);
+     }
+     if (this.opt.debug)
+-        util.log('Sending irc NICK/USER');
++        console.log('Sending irc NICK/USER');
+     this.send('NICK', this.opt.nick);
+     this.nick = this.opt.nick;
+     this._updateMaxLineLength();
+@@ -783,13 +791,13 @@ Client.prototype.connect = function(retryCount, callback) {
+ 
+                 if (self.opt.certExpired &&
+                     self.conn.authorizationError === 'CERT_HAS_EXPIRED') {
+-                    util.log('Connecting to server with expired certificate');
++                    console.log('Connecting to server with expired certificate');
+                 }
+ 
+                 self._connectionHandler();
+             } else {
+                 // authorization failed
+-                util.log(self.conn.authorizationError);
++                console.log(self.conn.authorizationError);
+             }
+         });
+     } else {
+@@ -856,26 +864,26 @@ Client.prototype.connect = function(retryCount, callback) {
+     self.conn.addListener('data', handleData);
+     self.conn.addListener('end', function() {
+         if (self.opt.debug)
+-            util.log('Connection got "end" event');
++            console.log('Connection got "end" event');
+     });
+     self.conn.addListener('close', function() {
+         if (self.opt.debug)
+-            util.log('Connection got "close" event');
++            console.log('Connection got "close" event');
+ 
+         if (self.conn && self.conn.requestedDisconnect)
+             return;
+         if (self.opt.debug)
+-            util.log('Disconnected: reconnecting');
++            console.log('Disconnected: reconnecting');
+         if (self.opt.retryCount !== null && retryCount >= self.opt.retryCount) {
+             if (self.opt.debug) {
+-                util.log('Maximum retry count (' + self.opt.retryCount + ') reached. Aborting');
++                console.log('Maximum retry count (' + self.opt.retryCount + ') reached. Aborting');
+             }
+             self.emit('abort', self.opt.retryCount);
+             return;
+         }
+ 
+         if (self.opt.debug) {
+-            util.log('Waiting ' + self.opt.retryDelay + 'ms before retrying');
++            console.log('Waiting ' + self.opt.retryDelay + 'ms before retrying');
+         }
+         setTimeout(function() {
+             self.connect(retryCount + 1);
+@@ -884,7 +892,7 @@ Client.prototype.connect = function(retryCount, callback) {
+     self.conn.addListener('error', function(exception) {
+         self.emit('netError', exception);
+         if (self.opt.debug) {
+-            util.log('Network error: ' + exception);
++            console.log('Network error: ' + exception);
+         }
+     });
+ };
+@@ -931,7 +939,7 @@ Client.prototype.send = function(command) {
+     }
+ 
+     if (this.opt.debug)
+-        util.log('SEND: ' + args.join(' '));
++        console.log('SEND: ' + args.join(' '));
+ 
+     if (!this.conn.requestedDisconnect) {
+         this.conn.write(args.join(' ') + '\r\n');
+@@ -1146,7 +1154,7 @@ Client.prototype.convertEncoding = function(str) {
+             out = converter.convert(str);
+         } catch (err) {
+             if (self.opt.debug) {
+-                util.log('\u001b[01;31mERROR: ' + err + '\u001b[0m');
++                console.log('\u001b[01;31mERROR: ' + err + '\u001b[0m');
+                 util.inspect({ str: str, charset: charset });
+             }
+         }

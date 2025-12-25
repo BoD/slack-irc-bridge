@@ -5,8 +5,9 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
 module.exports = {
     IRC_SERVER: process.env.IRC_SERVER,
     IRC_PORT: parseInt(process.env.IRC_PORT, 10),
-    IRC_SECURE: !!parseInt(process.env.IRC_SECURE, 10),
+    IRC_SECURE: process.env.IRC_SECURE === 'true',
     IRC_NICK: process.env.IRC_NICK,
+    IRC_USER_NAME: process.env.IRC_USER_NAME,
     IRC_PASSWORD: process.env.IRC_PASSWORD,
     IRC_CHANNEL: process.env.IRC_CHANNEL,
     IRC_SASL: process.env.IRC_SASL === 'true',

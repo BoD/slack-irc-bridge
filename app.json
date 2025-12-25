@@ -19,6 +19,9 @@
     "IRC_PASSWORD": {
       "required": true
     },
+    "IRC_USER_NAME": {
+      "required": true
+    },
     "IRC_CHANNEL": {
       "required": true
     },
@@ -32,7 +35,7 @@
     "HOST": {
       "required": true
     },
-    "NODE_ENV": "staging"
+    "NODE_ENV": "development"
   },
   "image": "heroku/nodejs"
 }
