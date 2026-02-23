@@ -65,9 +65,21 @@ ircClient.on('message', function (user, channel, text) {
     if (user === CONFIG.IRC_NICK) {
         return;
     }
+    if (channel.toUpperCase() === CONFIG.IRC_NICK.toUpperCase()) {
+        return;
+    }
     void slackApp.client.chat.postMessage({
         username: user,
         text: text,
+        channel: conversationId,
+        icon_url: `https://www.gravatar.com/avatar/${getGravatarId(user)}?d=wavatar`,
+    });
+});
+
+ircClient.on('pm', function (user, text) {
+    void slackApp.client.chat.postMessage({
+        username: user,
+        text: `(PRIVATE) ${text}`,
         channel: conversationId,
         icon_url: `https://www.gravatar.com/avatar/${getGravatarId(user)}?d=wavatar`,
     });
