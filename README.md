@@ -27,7 +27,27 @@ SLACK_CHANNEL=#slackchannel
 SLACK_TOKEN=xoxb...8WRqKWx
 NODE_ENV=development
 PORT=3000
+IRC_IGNORE_RULES=[{"user":"^unrMtp$","text":"^oui$"}]
 ```
+
+`IRC_IGNORE_RULES` is optional. It must be a JSON array of rules, where each rule can define:
+
+- `user`: a regular expression matched against the IRC nickname
+- `text`: a regular expression matched against the IRC message body
+
+If both are present, both must match for the message to be ignored. If only one is present, that one is enough to ignore the message.
+
+Example:
+
+```shell
+IRC_IGNORE_RULES=[{"user":"^unrMtp$","text":"^oui$"},{"user":"^bot-.*"}]
+```
+
+This ignores:
+
+- messages from `unrMtp` whose text is exactly `oui`
+- any message from a nickname starting with `bot-`
+
 ### Run
 
 ```shell

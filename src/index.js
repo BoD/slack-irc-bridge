@@ -16,6 +16,8 @@ const ircConfig = {
     debug: true
 };
 
+const ignoreRules = compileIgnoreRules(CONFIG.IRC_IGNORE_RULES);
+
 console.log("%O", ircConfig);
 
 const ircClient = new IRCClient(CONFIG.IRC_SERVER, CONFIG.IRC_NICK, ircConfig);
@@ -68,6 +70,9 @@ ircClient.on('message', function (user, channel, text) {
     if (channel.toUpperCase() === CONFIG.IRC_NICK.toUpperCase()) {
         return;
     }
+    if (shouldIgnoreMessage(user, text)) {
+        return;
+    }
     void slackApp.client.chat.postMessage({
         username: user,
         text: text,
@@ -77,6 +82,9 @@ ircClient.on('message', function (user, channel, text) {
 });
 
 ircClient.on('pm', function (user, text) {
+    if (shouldIgnoreMessage(user, text)) {
+        return;
+    }
     void slackApp.client.chat.postMessage({
         username: user,
         text: `(PRIVATE) ${text}`,
@@ -98,6 +106,34 @@ function getGravatarId(user) {
         result += user.charCodeAt(i).toString(16);
     }
     return result.padStart(32, "0");
+}
+
+function compileIgnoreRules(rules) {
+    return rules.reduce((compiledRules, rule, index) => {
+        if (!rule.user && !rule.text) {
+            console.error(`Ignoring IRC_IGNORE_RULES[${index}] because it has no user or text regex`);
+            return compiledRules;
+        }
+
+        try {
+            compiledRules.push({
+                user: rule.user ? new RegExp(rule.user) : null,
+                text: rule.text ? new RegExp(rule.text) : null,
+            });
+        } catch (error) {
+            console.error(`Ignoring IRC_IGNORE_RULES[${index}] because it is invalid: ${error.message}`);
+        }
+        return compiledRules;
+    }, []);
+}
+
+function shouldIgnoreMessage(user, text) {
+    return ignoreRules.some((rule) => {
+        if (rule.user && !rule.user.test(user)) {
+            return false;
+        }
+        return !rule.text || rule.text.test(text);
+    });
 }
 
 
